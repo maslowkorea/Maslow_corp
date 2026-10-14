@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1f4e46">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="기업전화">
+<title>기업전화 조회</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231f4e46'/%3E%3Cpath d='M22 16c2 0 3 1 4 3l3 7c.5 1.5 0 3-1 4l-3 2c2 4 5 7 9 9l2-3c1-1 2.5-1.5 4-1l7 3c2 1 3 2 3 4v5c0 2-2 4-4 4C29 53 11 35 11 18c0-2 2-4 4-4z' fill='%23f2c14e'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%231f4e46'/%3E%3Cpath d='M22 16c2 0 3 1 4 3l3 7c.5 1.5 0 3-1 4l-3 2c2 4 5 7 9 9l2-3c1-1 2.5-1.5 4-1l7 3c2 1 3 2 3 4v5c0 2-2 4-4 4C29 53 11 35 11 18c0-2 2-4 4-4z' fill='%23f2c14e'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* 한 손 조작: 상단 고정 검색창, 아래로 결과 카드 */
+:root{
+  --bg:#f3f5f2; --surface:#ffffff; --fg:#17201d; --muted:#5d6a65; --line:#d9dfdb;
+  --accent:#1f4e46; --accent-fg:#ffffff; --hi:#f2c14e; --err:#b3261e;
+  --sans:"IBM Plex Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0f1513; --surface:#18211e; --fg:#e7ece9; --muted:#9aa8a2; --line:#2b3632;
+  --accent:#5fb3a2; --accent-fg:#0b1311; --hi:#f2c14e; --err:#ff8a80; color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font:16px/1.5 var(--sans);
+  padding:env(safe-area-inset-top,0) max(16px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.wrap{max-width:560px;margin:0 auto}
+header{position:sticky;top:0;background:var(--bg);padding-block:14px 12px;z-index:2;display:grid;gap:10px}
+.top{display:flex;align-items:center;justify-content:space-between}
+h1{margin:0;font-size:20px;font-weight:700;letter-spacing:-.01em}
+h1 small{display:block;font-size:12px;font-weight:400;color:var(--muted);letter-spacing:0}
+.icon-btn{border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:10px;padding:8px 12px;font:600 14px var(--sans)}
+form{display:grid;gap:8px}
+input{width:100%;font:16px var(--sans);padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--fg)}
+input:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.go{border:0;border-radius:12px;padding:14px;background:var(--accent);color:var(--accent-fg);font:700 16px var(--sans)}
+.go:disabled{opacity:.6}
+.status{font-size:14px;color:var(--muted);min-height:1.5em;margin:4px 0 8px}
+.status.err{color:var(--err)}
+.list{display:grid;gap:10px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:6px}
+.name{font-weight:700;font-size:17px;line-height:1.35}
+.meta{font-size:13px;color:var(--muted)}
+.addr{font-size:14px}
+.addr mark{background:var(--hi);color:#17201d;border-radius:3px;padding:0 2px}
+.phone{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px}
+.num{font:500 19px var(--mono);font-variant-numeric:tabular-nums;user-select:all}
+.num.none{font:14px var(--sans);color:var(--muted)}
+.call,.copy{border-radius:10px;padding:8px 14px;font:600 14px var(--sans);text-decoration:none}
+.call{background:var(--accent);color:var(--accent-fg)}
+.copy{border:1px solid var(--line);background:transparent;color:var(--fg)}
+.fax{font-size:13px;color:var(--muted)}
+dialog{border:0;border-radius:16px;padding:20px;background:var(--surface);color:var(--fg);width:min(92vw,460px)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog h2{margin:0 0 6px;font-size:18px}
+dialog p{margin:0 0 12px;font-size:14px;color:var(--muted)}
+.row{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+.empty{padding:28px 8px;text-align:center;color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="top">
+      <h1>기업전화 조회<small>금융위원회 기업기본정보</small></h1>
+      <button class="icon-btn" id="openKey" type="button">인증키</button>
+    </div>
+    <form id="f" autocomplete="off">
+      <input id="qName" type="search" placeholder="기업명 (예: 메리츠자산운용)" enterkeyhint="search">
+      <input id="qAddr" type="search" placeholder="주소로 좁히기 (예: 종로구, 북촌로)" enterkeyhint="search">
+      <button class="go" id="goBtn" type="submit">조회</button>
+    </form>
+  </header>
+  <div class="status" id="status"></div>
+  <div class="list" id="list"><div class="empty">기업명을 넣고 조회하세요.<br>주소는 같은 이름 회사가 여럿일 때 좁히는 데 씁니다.</div></div>
+</div>
+
+<dialog id="keyDlg">
+  <form method="dialog" id="keyForm">
+    <h2>공공데이터포털 인증키</h2>
+    <p>data.go.kr에서 「금융위원회_기업기본정보」 활용신청 후 받은 일반 인증키(Decoding 또는 Encoding)를 붙여넣으세요. 이 폰에만 저장됩니다.</p>
+    <input id="keyInput" type="text" placeholder="인증키" autocapitalize="off" spellcheck="false">
+    <div class="row">
+      <button class="icon-btn" value="cancel" type="submit">닫기</button>
+      <button class="go" value="save" type="submit" id="saveKey">저장</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+const API = "https://apis.data.go.kr/1160100/service/GetCorpBasicInfoService_V2/getCorpOutline_V2";
+const $ = id => document.getElementById(id);
+const store = {
+  get(k){ try{ return localStorage.getItem(k) || ""; }catch(e){ return ""; } },
+  set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+};
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const norm = s => String(s ?? "").replace(/\s+/g, "");
+
+function setStatus(msg, err){ const s=$("status"); s.textContent=msg; s.className="status"+(err?" err":""); }
+
+function openKey(){ $("keyInput").value = store.get("svcKey"); $("keyDlg").showModal(); }
+$("openKey").onclick = openKey;
+$("keyDlg").addEventListener("close", () => {
+  if ($("keyDlg").returnValue === "save") {
+    store.set("svcKey", $("keyInput").value.trim());
+    setStatus("인증키를 저장했습니다.");
+  }
+});
+
+function keyParam(k){ return /%[0-9A-Fa-f]{2}/.test(k) ? k : encodeURIComponent(k); }
+
+async function fetchPage(key, name, page){
+  const url = API + "?serviceKey=" + keyParam(key) +
+    "&pageNo=" + page + "&numOfRows=100&resultType=json&corpNm=" + encodeURIComponent(name);
+  const res = await fetch(url);
+  const text = await res.text();
+  let data;
+  try { data = JSON.parse(text); }
+  catch(e){
+    const m = text.match(/<returnAuthMsg>([^<]+)/) || text.match(/<errMsg>([^<]+)/);
+    throw new Error(m ? "API 오류: " + m[1] : "응답을 읽지 못했습니다 (HTTP " + res.status + ")");
+  }
+  const h = data?.response?.header;
+  if (h && h.resultCode !== "00") throw new Error("API 오류: " + (h.resultMsg || h.resultCode));
+  const body = data?.response?.body || {};
+  let items = body?.items?.item || [];
+  if (!Array.isArray(items)) items = [items];
+  return { items, total: Number(body.totalCount || items.length) };
+}
+
+function latestPerCorp(items){
+  const map = new Map();
+  for (const it of items) {
+    const id = it.crno || (it.corpNm + "|" + it.enpBsadr);
+    const key = (it.fssCorpChgDtm || "") + (it.lastOpegDt || "");
+    const prev = map.get(id);
+    if (!prev || key > prev._k) map.set(id, Object.assign({_k:key}, it));
+  }
+  return [...map.values()];
+}
+
+function hl(addr, q){
+  const a = esc(addr); if (!q) return a;
+  const i = norm(addr).indexOf(norm(q));
+  if (i < 0) return a;
+  // 공백 무시 매칭 → 원문 위치로 환산
+  let start=-1, end=-1, n=0;
+  for (let p=0;p<addr.length;p++){ if(/\s/.test(addr[p])) continue; if(n===i) start=p; n++; if(n===i+norm(q).length){ end=p+1; break; } }
+  if (start<0||end<0) return a;
+  return esc(addr.slice(0,start)) + "<mark>" + esc(addr.slice(start,end)) + "</mark>" + esc(addr.slice(end));
+}
+
+function render(rows, addrQ){
+  const list = $("list");
+  if (!rows.length){ list.innerHTML = '<div class="empty">결과가 없습니다.</div>'; return; }
+  list.innerHTML = rows.map((r,i) => {
+    const tel = (r.enpTlno || "").trim();
+    const addr = (r.enpBsadr || r.enpDtadr || "").trim();
+    const telDigits = tel.replace(/[^0-9+]/g,"");
+    return `<div class="card">
+      <div class="name">${esc(r.corpNm)}</div>
+      <div class="meta">${r.enpRprFnm ? "대표 " + esc(r.enpRprFnm) : ""}${r.bzno ? " · 사업자 " + esc(r.bzno.replace(/(\d{3})(\d{2})(\d{5})/,"$1-$2-$3")) : ""}</div>
+      ${addr ? `<div class="addr">${hl(addr, addrQ)}</div>` : ""}
+      <div class="phone">
+        ${tel ? `<span class="num">${esc(tel)}</span>
+          <a class="call" href="tel:${esc(telDigits)}">전화</a>
+          <button class="copy" type="button" data-t="${esc(tel)}">복사</button>`
+          : `<span class="num none">전화번호 정보 없음</span>`}
+      </div>
+      ${r.enpFxno ? `<div class="fax">팩스 ${esc(r.enpFxno)}</div>` : ""}
+    </div>`;
+  }).join("");
+}
+
+$("list").addEventListener("click", async e => {
+  const b = e.target.closest(".copy"); if (!b) return;
+  try { await navigator.clipboard.writeText(b.dataset.t); b.textContent = "복사됨"; }
+  catch(err){ const r=document.createRange(); r.selectNodeContents(b.previousElementSibling.previousElementSibling); const s=getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent="선택됨"; }
+  setTimeout(() => b.textContent = "복사", 1500);
+});
+
+$("f").addEventListener("submit", async e => {
+  e.preventDefault();
+  const name = $("qName").value.trim();
+  const addrQ = $("qAddr").value.trim();
+  const key = store.get("svcKey");
+  if (!key){ openKey(); return; }
+  if (!name){
+    setStatus("이 API는 기업명으로만 검색됩니다. 기업명을 넣고, 주소는 결과를 좁히는 데 쓰세요.", true);
+    return;
+  }
+  store.set("lastName", name); store.set("lastAddr", addrQ);
+  $("goBtn").disabled = true; setStatus("조회 중…");
+  try {
+    let all = [], page = 1, total = 0;
+    do {
+      const r = await fetchPage(key, name, page);
+      all = all.concat(r.items); total = r.total; page++;
+    } while (all.length < total && page <= 5);
+    let rows = latestPerCorp(all);
+    if (addrQ) rows = rows.filter(r => norm((r.enpBsadr||"") + (r.enpDtadr||"")).includes(norm(addrQ)));
+    rows.sort((a,b) => (b.enpTlno?1:0) - (a.enpTlno?1:0) || (a.corpNm||"").localeCompare(b.corpNm||"","ko"));
+    render(rows, addrQ);
+    setStatus(rows.length + "곳" + (addrQ ? " (주소 '" + addrQ + "' 포함)" : "") + (total > all.length ? " · 앞쪽 " + all.length + "건만 확인" : ""));
+  } catch(err){
+    const msg = err instanceof TypeError
+      ? "연결하지 못했습니다. 인터넷 연결을 확인하거나, 브라우저가 공공데이터포털 접속을 막는지 확인하세요."
+      : err.message;
+    setStatus(msg, true);
+  } finally { $("goBtn").disabled = false; }
+});
+
+$("qName").value = store.get("lastName");
+$("qAddr").value = store.get("lastAddr");
+if (!store.get("svcKey")) setStatus("처음이면 오른쪽 위 ‘인증키’에서 공공데이터포털 키를 넣어주세요.");
+</script>
+</body>
+</html>
